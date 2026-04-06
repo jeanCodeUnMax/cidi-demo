@@ -1,8 +1,8 @@
 # Dockerfile pour Ollama avec modèle léger pré-installé
 FROM ollama/ollama:latest
 
-# Définir le modèle léger à utiliser (phi3:mini = ~2GB, très rapide)
-ENV MODEL_NAME=phi3:mini
+# Définir le modèle ultra-léger (llama3.2:1b = ~1.3GB, plus rapide à télécharger)
+ENV MODEL_NAME=llama3.2:1b
 
 # Créer le script de démarrage qui télécharge le modèle automatiquement
 RUN mkdir -p /scripts

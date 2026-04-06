@@ -45,7 +45,7 @@ jobs:
           
           # Attendre que le modèle soit prêt
           echo "Attente du modèle Ollama..."
-          until curl -s http://localhost:11434/api/tags | grep -q "phi3:mini"; do
+          until curl -s http://localhost:11434/api/tags | grep -q "llama3.2:1b"; do
             echo "Modèle pas encore prêt, attente..."
             sleep 10
           done
@@ -55,7 +55,7 @@ jobs:
       - name: Generate website from PRD
         env:
           OLLAMA_HOST: http://localhost:11434
-          MODEL_NAME: phi3:mini
+          MODEL_NAME: llama3.2:1b
           PRD_DIR: prd
           OUTPUT_DIR: output
         run: |
