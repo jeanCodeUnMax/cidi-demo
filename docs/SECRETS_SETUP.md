@@ -24,10 +24,10 @@ Cliquer sur **"New repository secret"** pour chaque clé :
 
 | Secret Name | Value |
 |-------------|-------|
-| `MISTRAL_API_KEY` | `LcmiaetZT58FgcEqS1IH6NqhLnDrUVhB` |
-| `GROQ_API_KEY` | `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` |
-| `GOOGLE_API_KEY` | `AIzaSyAjMsQWGqXKvSbksWDEIn9HCDM2y3kiP1c` |
-| `OPENROUTER_API_KEY` | `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` |
+| `MISTRAL_API_KEY` | `<your-mistral-api-key>` |
+| `GROQ_API_KEY` | `<your-groq-api-key>` |
+| `GOOGLE_API_KEY` | `<your-google-api-key>` |
+| `OPENROUTER_API_KEY` | `<your-openrouter-api-key>` |
 
 ### 3. Débloquer le push
 

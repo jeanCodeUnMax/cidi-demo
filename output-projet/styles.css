@@ -1,0 +1,152 @@
+```css
+/* Variables */
+:root {
+  --primary-color: #FFD700;
+  --secondary-color: #FF0000;
+  --background-color: #000000;
+  --pixel-size: 16px;
+  --speed: 0.5s;
+}
+
+/* Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Body */
+body {
+  background-color: var(--background-color);
+  font-family: 'Pixel', sans-serif;
+  overflow: hidden;
+}
+
+/* Canvas */
+#canvas {
+  border: 1px solid var(--primary-color);
+  width: 256px;
+  height: 240px;
+  image-rendering: pixelated;
+  transform: scale(3);
+}
+
+/* Sprites */
+.sprite {
+  position: absolute;
+  width: var(--pixel-size);
+  height: var(--pixel-size);
+  background-size: var(--pixel-size) var(--pixel-size);
+}
+
+/* Player */
+.player {
+  background-image: url('player.png');
+  animation: run 0.5s steps(4);
+}
+
+@keyframes run {
+  0% {
+    background-position: 0 0;
+  }
+  25% {
+    background-position: -16px 0;
+  }
+  50% {
+    background-position: -32px 0;
+  }
+  75% {
+    background-position: -48px 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* Enemies */
+.enemies {
+  background-image: url('enemies.png');
+  animation: walk 0.5s steps(2);
+}
+
+@keyframes walk {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: -16px 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* Tiles */
+.tiles {
+  background-image: url('tiles.png');
+}
+
+/* Items */
+.items {
+  background-image: url('items.png');
+  animation: rotate 0.5s linear;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* UI */
+.ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 16px;
+  color: var(--primary-color);
+}
+
+/* Parallax */
+.parallax {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('parallax.png');
+  background-size: cover;
+  animation: scroll 10s linear;
+}
+
+@keyframes scroll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* Dark Mode */
+body.dark {
+  --background-color: #333333;
+  --primary-color: #CCCCCC;
+}
+
+/* Responsive Design */
+@media only screen and (max-width: 768px) {
+  #canvas {
+    transform: scale(2);
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #canvas {
+    transform: scale(1.5);
+  }
+}
+```

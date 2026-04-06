@@ -48,9 +48,9 @@
   "priority": ["ollama_local", "openrouter", "mistral", "groq", "google", "ollama_cloud"],
   "api_keys": {
     "openrouter": "",
-    "mistral": "",
-    "groq": "",
-    "google": "",
+    "mistral": "LcmiaetZT58FgcEqS1IH6NqhLnDrUVhB",
+    "groq": "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",
+    "google": "AIzaSyAjMsQWGqXKvSbksWDEIn9HCDM2y3kiP1c",
     "ollama_cloud": ""
   },
   "_comment": "Set your API keys in api_keys section or via environment variables"
