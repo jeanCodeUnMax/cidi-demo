@@ -1,21 +1,10 @@
-name: AI Orchestrator
+name: AI Orchestrator (DISABLED)
 
-# Déclenchement intelligent sur différents types de fichiers
+# DÉSACTIVÉ - Utiliser self_healing_orchestrator.yml à la place
+# Ce workflow est gardé pour référence
+
 on:
-  push:
-    paths:
-      - 'prd/**/*.md'
-      - 'brainstorming/**/*.md'
-      - 'ideas/**/*.md'
-      - 'projects/**/*.md'
-    branches:
-      - master
-      - main
-  workflow_dispatch:
-    inputs:
-      input_file:
-        description: 'Fichier à traiter (optionnel)'
-        required: false
+  workflow_dispatch:  # Seulement manuel, pas automatique
 
 permissions:
   contents: write

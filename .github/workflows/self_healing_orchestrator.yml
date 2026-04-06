@@ -11,6 +11,10 @@ on:
       - master
       - main
   workflow_dispatch:
+    inputs:
+      input_file:
+        description: 'Fichier à traiter (optionnel)'
+        required: false
 
 permissions:
   contents: write
@@ -56,8 +60,27 @@ jobs:
       - name: Detect Input File
         id: detect
         run: |
-          LAST_FILE=$(git log --oneline --name-only -1 | tail -n +2 | grep -E '\.md$' | head -1)
-          echo "file=${LAST_FILE:-prd/exemple-site-portfolio.md}" >> $GITHUB_OUTPUT
+          # Si input manuel, utiliser ce fichier
+          if [ -n "${{ github.event.inputs.input_file }}" ]; then
+            FILE="${{ github.event.inputs.input_file }}"
+          else
+            # Trouver le dernier fichier modifié
+            FILE=$(git log --oneline --name-only -1 | tail -n +2 | grep -E '\.md$' | head -1)
+            
+            # Fallback si aucun fichier trouvé
+            if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then
+              FILE="prd/exemple-site-portfolio.md"
+            fi
+          fi
+          
+          echo "Detected file: $FILE"
+          echo "file=$FILE" >> $GITHUB_OUTPUT
+          
+          # Vérifier que le fichier existe
+          if [ ! -f "$FILE" ]; then
+            echo "::error::Fichier non trouvé: $FILE"
+            exit 1
+          fi
 
       # 7. Execute with Auto-Healing
       - name: Execute with Auto-Healing
