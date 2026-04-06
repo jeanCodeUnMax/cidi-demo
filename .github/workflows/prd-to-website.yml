@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install requests
 
-      # 4. Installer et démarrer Ollama avec un modèle valide
+      # 4. Installer et démarrer Ollama avec minimax-m2.7:cloud
       - name: Install and start Ollama
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
@@ -43,21 +43,20 @@ jobs:
           ollama serve &
           # Attendre que le serveur soit prêt
           sleep 5
-          # Télécharger un modèle léger valide
-          ollama pull llama3.2:1b
+          # Vérifier que le serveur répond
           curl -s http://localhost:11434/api/tags
 
-      # 5. Générer le site web via Ollama
+      # 5. Générer le site web via Ollama Cloud (minimax-m2.7:cloud = 200K contexte, gratuit)
       - name: Generate website from PRD
         env:
           OLLAMA_HOST: http://localhost:11434
-          MODEL_NAME: llama3.2:1b
+          MODEL_NAME: minimax-m2.7:cloud
           PRD_DIR: prd
           OUTPUT_DIR: output
         run: |
           python scripts/generate_website.py
 
-      # 5. Commit et push du résultat
+      # 6. Commit et push du résultat
       - name: Commit generated website
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"

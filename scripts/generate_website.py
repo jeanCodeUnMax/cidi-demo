@@ -9,10 +9,10 @@ import json
 import requests
 from pathlib import Path
 
-# Configuration - Utilise Ollama local
-# Modèles valides: llama3.2:1b, phi3:mini, mistral:7b, etc.
+# Configuration - Utilise Ollama Cloud (modèle cloud gratuit)
+# minimax-m2.7:cloud = 200K contexte, optimisé pour le code
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-MODEL_NAME = os.environ.get("MODEL_NAME", "llama3.2:1b")
+MODEL_NAME = os.environ.get("MODEL_NAME", "minimax-m2.7:cloud")
 PRD_DIR = Path(os.environ.get("PRD_DIR", "prd"))
 OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
 
