@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script qui lit un PRD et génère un site web HTML/CSS via Ollama Cloud API
+Script qui lit un PRD et génère un site web HTML/CSS via Ollama Cloud (model:cloud)
 """
 
 import os
@@ -9,11 +9,10 @@ import json
 import requests
 from pathlib import Path
 
-# Configuration - Utilise Groq API (gratuit et ultra-rapide)
-# Obtenir une clé gratuite: https://console.groq.com/
-API_URL = os.environ.get("API_URL", "https://api.groq.com/openai/v1/chat/completions")
-API_KEY = os.environ.get("API_KEY", "")
-MODEL_NAME = os.environ.get("MODEL_NAME", "llama-3.2-1b-preview")
+# Configuration - Utilise Ollama Cloud (model:cloud = pas de clé API)
+# Modèles cloud disponibles: minimax-m2.7:cloud, etc.
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+MODEL_NAME = os.environ.get("MODEL_NAME", "minimax-m2.7:cloud")
 PRD_DIR = Path(os.environ.get("PRD_DIR", "prd"))
 OUTPUT_DIR = Path(os.environ.get("OUTPUT_DIR", "output"))
 
@@ -26,8 +25,8 @@ def read_prd(prd_file: str) -> str:
     with open(prd_path, 'r', encoding='utf-8') as f:
         return f.read()
 
-def call_groq_api(prompt: str) -> str:
-    """Appelle l'API Groq pour générer le code"""
+def call_ollama_cloud(prompt: str) -> str:
+    """Appelle Ollama avec un modèle cloud (model:cloud = pas de clé API)"""
     
     system_prompt = """Tu es un expert en développement web. Ta tâche est de générer du code HTML et CSS complet et fonctionnel basé sur les spécifications fournies.
 
@@ -46,32 +45,28 @@ Format de réponse attendu:
 </html>
 ```"""
 
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {API_KEY}"
-    }
+    url = f"{OLLAMA_HOST}/api/chat"
     
-    # Format OpenAI-compatible
+    # Format Ollama /api/chat
     payload = {
         "model": MODEL_NAME,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.7,
-        "max_tokens": 4096
+        "stream": False
     }
     
-    print(f"Appel à Groq API avec le modèle {MODEL_NAME}...")
+    print(f"Appel à Ollama avec le modèle cloud {MODEL_NAME}...")
     
     try:
-        response = requests.post(API_URL, json=payload, headers=headers, timeout=120)
+        response = requests.post(url, json=payload, timeout=120)
         response.raise_for_status()
         
         result = response.json()
-        return result["choices"][0]["message"]["content"]
+        return result["message"]["content"]
     except requests.exceptions.RequestException as e:
-        print(f"Erreur API Groq: {e}")
+        print(f"Erreur Ollama: {e}")
         # Fallback: générer un template de base
         return generate_fallback_html(prompt)
 
@@ -161,8 +156,8 @@ def main():
 
 Génère le code HTML complet avec CSS intégré qui correspond à ces spécifications."""
     
-    # Appeler Groq API
-    response = call_groq_api(prompt)
+    # Appeler Ollama Cloud
+    response = call_ollama_cloud(prompt)
     
     # Extraire le HTML
     html_content = extract_html(response)
