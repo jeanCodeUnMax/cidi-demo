@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "context7-server",
+      "description": "Documentation technique à jour (librairies, frameworks)",
+      "capabilities": ["fetch_docs", "search_examples", "get_best_practices"]
+    },
+    "github": {
+      "command": "mcp-server-github",
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "Recherche de code source sur GitHub",
+      "capabilities": ["search_repos", "get_readme", "browse_code", "find_examples"]
+    },
+    "npm": {
+      "command": "mcp-server-npm",
+      "description": "Recherche de packages NPM",
+      "capabilities": ["search_packages", "get_versions", "check_vulnerabilities"]
+    },
+    "web-search": {
+      "command": "mcp-server-tavily",
+      "env": {
+        "TAVILY_API_KEY": "${TAVILY_API_KEY}"
+      },
+      "description": "Recherche web pour enrichir les connaissances",
+      "capabilities": ["search", "extract_content", "get_latest_info"]
+    },
+    "filesystem": {
+      "command": "mcp-server-filesystem",
+      "args": ["--root", "."],
+      "description": "Gestion des fichiers locaux",
+      "capabilities": ["read", "write", "create_dir", "list_files"]
+    },
+    "browser": {
+      "command": "mcp-server-puppeteer",
+      "description": "Navigation web et screenshots",
+      "capabilities": ["navigate", "screenshot", "extract_text", "click"]
+    }
+  }
+}

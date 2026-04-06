@@ -25,6 +25,19 @@ def read_prd(prd_file: str) -> str:
     with open(prd_path, 'r', encoding='utf-8') as f:
         return f.read()
 
+def load_skills() -> str:
+    """Charge les skills depuis le dossier skills/"""
+    skills_dir = Path("skills")
+    if not skills_dir.exists():
+        return "Web development expert"
+    
+    skills_content = []
+    for skill_file in skills_dir.glob("*.md"):
+        with open(skill_file, 'r', encoding='utf-8') as f:
+            skills_content.append(f.read())
+    
+    return "\n\n".join(skills_content) if skills_content else "Web development expert"
+
 def call_ollama_cloud(prompt: str) -> str:
     """Appelle Ollama avec un modèle cloud (model:cloud = pas de clé API)"""
     
