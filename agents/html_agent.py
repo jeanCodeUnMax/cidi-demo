@@ -70,7 +70,14 @@ FORMAT:
                 timeout=60
             )
             result = response.json()
-            html = result["message"]["content"]
+            
+            # Gérer différents formats de réponse Ollama
+            if "message" in result and "content" in result["message"]:
+                html = result["message"]["content"]
+            elif "response" in result:
+                html = result["response"]
+            else:
+                raise ValueError(f"Format de réponse inattendu: {result.keys()}")
             
             self.log(f"HTML généré: {len(html)} caractères", "SUCCESS")
             return html

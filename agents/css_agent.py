@@ -73,7 +73,14 @@ FORMAT:
                 timeout=60
             )
             result = response.json()
-            css = result["message"]["content"]
+            
+            # Gérer différents formats de réponse Ollama
+            if "message" in result and "content" in result["message"]:
+                css = result["message"]["content"]
+            elif "response" in result:
+                css = result["response"]
+            else:
+                raise ValueError(f"Format de réponse inattendu: {result.keys()}")
             
             self.log(f"CSS généré: {len(css)} caractères", "SUCCESS")
             return css
