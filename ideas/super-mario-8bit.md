@@ -143,3 +143,5 @@ open output-projet/index.html
 ---
 
 _Généré pour test multi-provider orchestration_
+
+> 🎮 v1 - Test GitHub Actions

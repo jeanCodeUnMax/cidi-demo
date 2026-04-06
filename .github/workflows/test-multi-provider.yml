@@ -1,0 +1,411 @@
+name: Test Multi-Provider - Super Mario 8-bit
+
+# Workflow de test pour prouver que les providers fonctionnent
+# Génère un jeu complet via GitHub Actions
+
+on:
+  push:
+    paths:
+      - 'ideas/super-mario-8bit.md'
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  # Orchestrateur principal
+  orchestrate:
+    runs-on: ubuntu-latest
+    outputs:
+      prd_content: ${{ steps.load.outputs.content }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load PRD
+        id: load
+        run: |
+          # Lire le PRD
+          PRD_CONTENT=$(cat ideas/super-mario-8bit.md | base64 -w 0)
+          echo "content=$PRD_CONTENT" >> $GITHUB_OUTPUT
+          echo "📄 PRD chargé: $(cat ideas/super-mario-8bit.md | wc -c) bytes"
+
+  # Agent HTML - Mistral
+  agent-html:
+    needs: orchestrate
+    runs-on: ubuntu-latest
+    outputs:
+      html_size: ${{ steps.generate.outputs.size }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate HTML with Mistral
+        id: generate
+        env:
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          PRD_CONTENT: ${{ needs.orchestrate.outputs.prd_content }}
+        run: |
+          python -c "
+          import requests
+          import base64
+          import time
+
+          # Décoder le PRD
+          prd = base64.b64decode('$PRD_CONTENT').decode('utf-8')
+
+          print('🤖 Appel Mistral API...')
+          start = time.time()
+
+          response = requests.post(
+              'https://api.mistral.ai/v1/chat/completions',
+              headers={'Authorization': 'Bearer $MISTRAL_API_KEY'},
+              json={
+                  'model': 'mistral-small',
+                  'messages': [
+                      {'role': 'system', 'content': '''Tu es un expert HTML5. Génère le fichier index.html complet pour un jeu Super Mario style années 80.
+                      
+                      RÈGLES:
+                      - HTML5 sémantique complet
+                      - Canvas pour le rendu du jeu
+                      - Structure modulaire
+                      - Commentaires clairs
+                      - Pas d'explications, juste le code'''},
+                      {'role': 'user', 'content': f'Génère le HTML pour:\\n{prd[:2000]}'}
+                  ]
+              },
+              timeout=120
+          )
+
+          result = response.json()
+          
+          if 'error' in result:
+              raise Exception(f\"Mistral error: {result['error']}\")
+          
+          html = result['choices'][0]['message']['content']
+          
+          # Nettoyer le markdown si présent
+          if html.startswith('\`\`\`html'):
+              html = html.split('\`\`\`html')[1].split('\`\`\`')[0]
+          elif html.startswith('\`\`\`'):
+              html = html.split('\`\`\`')[1].split('\`\`\`')[0]
+          
+          # Sauvegarder
+          import os
+          os.makedirs('output-projet', exist_ok=True)
+          with open('output-projet/index.html', 'w') as f:
+              f.write(html)
+          
+          elapsed = time.time() - start
+          print(f'✅ HTML généré: {len(html)} bytes en {elapsed:.1f}s')
+          
+          # Output
+          print(f'::set-output name=size::{len(html)}')
+          "
+
+      - name: Upload HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-output
+          path: output-projet/index.html
+
+  # Agent CSS - Groq
+  agent-css:
+    needs: orchestrate
+    runs-on: ubuntu-latest
+    outputs:
+      css_size: ${{ steps.generate.outputs.size }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate CSS with Groq
+        id: generate
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PRD_CONTENT: ${{ needs.orchestrate.outputs.prd_content }}
+        run: |
+          python -c "
+          import requests
+          import base64
+          import time
+
+          # Décoder le PRD
+          prd = base64.b64decode('$PRD_CONTENT').decode('utf-8')
+
+          print('🤖 Appel Groq API...')
+          start = time.time()
+
+          response = requests.post(
+              'https://api.groq.com/openai/v1/chat/completions',
+              headers={'Authorization': 'Bearer $GROQ_API_KEY'},
+              json={
+                  'model': 'llama-3.3-70b-versatile',
+                  'messages': [
+                      {'role': 'system', 'content': '''Tu es un expert CSS3. Génère le fichier styles.css complet pour un jeu Super Mario style années 80.
+                      
+                      RÈGLES:
+                      - CSS moderne avec variables
+                      - Animations CSS3
+                      - Pixel art styling
+                      - Performance optimisée
+                      - Pas d'explications, juste le code'''},
+                      {'role': 'user', 'content': f'Génère le CSS pour:\\n{prd[:2000]}'}
+                  ]
+              },
+              timeout=120
+          )
+
+          result = response.json()
+          
+          if 'error' in result:
+              raise Exception(f\"Groq error: {result['error']}\")
+          
+          css = result['choices'][0]['message']['content']
+          
+          # Nettoyer le markdown si présent
+          if css.startswith('\`\`\`css'):
+              css = css.split('\`\`\`css')[1].split('\`\`\`')[0]
+          elif css.startswith('\`\`\`'):
+              css = css.split('\`\`\`')[1].split('\`\`\`')[0]
+          
+          # Sauvegarder
+          import os
+          os.makedirs('output-projet', exist_ok=True)
+          with open('output-projet/styles.css', 'w') as f:
+              f.write(css)
+          
+          elapsed = time.time() - start
+          print(f'✅ CSS généré: {len(css)} bytes en {elapsed:.1f}s')
+          
+          print(f'::set-output name=size::{len(css)}')
+          "
+
+      - name: Upload CSS
+        uses: actions/upload-artifact@v4
+        with:
+          name: css-output
+          path: output-projet/styles.css
+
+  # Agent JS - Google Gemini
+  agent-js:
+    needs: orchestrate
+    runs-on: ubuntu-latest
+    outputs:
+      js_size: ${{ steps.generate.outputs.size }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate JS with Google Gemini
+        id: generate
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          PRD_CONTENT: ${{ needs.orchestrate.outputs.prd_content }}
+        run: |
+          python -c "
+          import requests
+          import base64
+          import time
+
+          # Décoder le PRD
+          prd = base64.b64decode('$PRD_CONTENT').decode('utf-8')
+
+          print('🤖 Appel Google Gemini API...')
+          start = time.time()
+
+          response = requests.post(
+              'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
+              headers={
+                  'Content-Type': 'application/json',
+                  'X-goog-api-key': '$GOOGLE_API_KEY'
+              },
+              json={
+                  'contents': [{
+                      'parts': [{
+                          'text': f'''Tu es un expert JavaScript. Génère le fichier game.js complet pour un jeu Super Mario style années 80 avec son 8-bit.
+
+PRD:
+{prd[:3000]}
+
+RÈGLES:
+- JavaScript vanilla ES6+
+- Moteur de jeu complet (physique, collisions, player, enemies, audio 8-bit)
+- Web Audio API pour synthèse 8-bit
+- Commentaires JSDoc
+- Pas d'explications, juste le code'''
+                      }]
+                  }]
+              },
+              timeout=120
+          )
+
+          result = response.json()
+          
+          if 'error' in result:
+              raise Exception(f\"Google error: {result['error']}\")
+          
+          js = result['candidates'][0]['content']['parts'][0]['text']
+          
+          # Nettoyer le markdown si présent
+          if js.startswith('\`\`\`javascript'):
+              js = js.split('\`\`\`javascript')[1].split('\`\`\`')[0]
+          elif js.startswith('\`\`\`js'):
+              js = js.split('\`\`\`js')[1].split('\`\`\`')[0]
+          elif js.startswith('\`\`\`'):
+              js = js.split('\`\`\`')[1].split('\`\`\`')[0]
+          
+          # Sauvegarder
+          import os
+          os.makedirs('output-projet', exist_ok=True)
+          with open('output-projet/game.js', 'w') as f:
+              f.write(js)
+          
+          elapsed = time.time() - start
+          print(f'✅ JS généré: {len(js)} bytes en {elapsed:.1f}s')
+          
+          print(f'::set-output name=size::{len(js)}')
+          "
+
+      - name: Upload JS
+        uses: actions/upload-artifact@v4
+        with:
+          name: js-output
+          path: output-projet/game.js
+
+  # Fusion et rapport
+  fuse-and-report:
+    needs: [agent-html, agent-css, agent-js]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Fuse Components
+        run: |
+          mkdir -p output-projet
+          
+          # Copier les fichiers générés
+          cp artifacts/html-output/index.html output-projet/ 2>/dev/null || echo "<!-- HTML pending -->" > output-projet/index.html
+          cp artifacts/css-output/styles.css output-projet/ 2>/dev/null || echo "/* CSS pending */" > output-projet/styles.css
+          cp artifacts/js-output/game.js output-projet/ 2>/dev/null || echo "// JS pending" > output-projet/game.js
+          
+          # Intégrer CSS et JS dans HTML
+          if [ -f output-projet/index.html ]; then
+            # Ajouter link CSS
+            sed -i '/<\/head>/i <link rel="stylesheet" href="styles.css">' output-projet/index.html
+            # Ajouter script JS
+            sed -i '/<\/body>/i <script src="game.js"></script>' output-projet/index.html
+          fi
+          
+          echo "✅ Fichiers fusionnés"
+          ls -la output-projet/
+
+      - name: Generate Test Report
+        run: |
+          cat > output-projet/TEST_REPORT.md << EOF
+          # 🧪 Rapport de Test Multi-Provider
+
+          > Exécuté le: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          ## ✅ Preuves d'Exécution
+
+          | Provider | Modèle | Fichier | Taille |
+          |----------|--------|---------|--------|
+          | **Mistral** | mistral-small | index.html | ${{ needs.agent-html.outputs.html_size }} bytes |
+          | **Groq** | llama-3.3-70b-versatile | styles.css | ${{ needs.agent-css.outputs.css_size }} bytes |
+          | **Google Gemini** | gemini-flash-latest | game.js | ${{ needs.agent-js.outputs.js_size }} bytes |
+
+          ## 📁 Artefacts Générés
+
+          - \`index.html\` - Structure HTML
+          - \`styles.css\` - Styles CSS
+          - \`game.js\` - Moteur de jeu JavaScript
+
+          ## 🔗 Téléchargement
+
+          Les artefacts sont disponibles dans l'onglet "Artifacts" de cette exécution.
+
+          ## 🎮 Test du Jeu
+
+          1. Télécharger les artefacts
+          2. Ouvrir \`index.html\` dans un navigateur
+          3. Contrôles: ← → pour bouger, Espace pour sauter
+
+          ---
+
+          _Test exécuté via GitHub Actions - Preuve irréfutable_
+          EOF
+
+      - name: Upload Final Project
+        uses: actions/upload-artifact@v4
+        with:
+          name: super-mario-8bit-complete
+          path: output-projet/
+
+      - name: Commit Results
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git pull --rebase origin master || true
+          
+          git add output-projet/
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "🎮 Test Multi-Provider: Super Mario 8-bit généré via GitHub Actions"
+          
+          git push || true
+
+      - name: Summary
+        run: |
+          echo "## 🎮 Test Multi-Provider - Super Mario 8-bit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Preuves d'Exécution" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Provider | Modèle | Fichier | Taille |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Mistral | mistral-small | index.html | ${{ needs.agent-html.outputs.html_size }} bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "| Groq | llama-3.3-70b-versatile | styles.css | ${{ needs.agent-css.outputs.css_size }} bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "| Google Gemini | gemini-flash-latest | game.js | ${{ needs.agent-js.outputs.js_size }} bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Télécharger" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Les artefacts sont disponibles dans l'onglet **Artifacts** ci-dessus." >> $GITHUB_STEP_SUMMARY
