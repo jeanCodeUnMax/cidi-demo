@@ -1,0 +1,106 @@
+{
+  "name": "project-template",
+  "version": "1.0.0",
+  "description": "Template standardisé pour projets IA",
+  
+  "structure": {
+    "directories": {
+      "prd/": "Documents de spécification (Product Requirements)",
+      "brainstorming/": "Idées brutes et concepts",
+      "ideas/": "Concepts API/CLI/outils",
+      "skills/": "Compétences de l'agent (markdown)",
+      "agents/": "Agents atomiques (Python)",
+      "mcp/": "Configurations MCP servers",
+      "scripts/": "Scripts d'orchestration",
+      "output/": "Résultats générés",
+      "logs/": "Logs d'exécution",
+      ".state/": "État du projet (roadmap, mémoire)",
+      "tests/": "Tests automatisés",
+      "docs/": "Documentation générée"
+    },
+    
+    "required_files": {
+      "README.md": "Description du projet",
+      ".gitignore": "Fichiers à ignorer",
+      "skills/orchestrator.md": "Skill principale",
+      "mcp/servers.json": "Configuration MCP",
+      ".state/current_state.json": "État actuel (auto-généré)"
+    }
+  },
+  
+  "phases": {
+    "research": {
+      "description": "Recherche et collecte d'informations",
+      "agents": ["researcher"],
+      "mcp_servers": ["context7", "github", "npm", "web-search"],
+      "timeout": 300,
+      "retry_on_failure": true
+    },
+    "planning": {
+      "description": "Planification et découpage des tâches",
+      "agents": ["orchestrator"],
+      "mcp_servers": [],
+      "timeout": 120,
+      "retry_on_failure": true
+    },
+    "development": {
+      "description": "Développement du projet",
+      "agents": ["html_agent", "css_agent", "js_agent"],
+      "mcp_servers": ["filesystem"],
+      "timeout": 600,
+      "retry_on_failure": true,
+      "parallel": true
+    },
+    "testing": {
+      "description": "Tests et validation",
+      "agents": ["tester"],
+      "mcp_servers": ["browser"],
+      "timeout": 300,
+      "retry_on_failure": false
+    },
+    "deployment": {
+      "description": "Déploiement et mise en ligne",
+      "agents": ["deployer"],
+      "mcp_servers": ["github"],
+      "timeout": 180,
+      "retry_on_failure": true
+    }
+  },
+  
+  "cleanup_policy": {
+    "on_success": {
+      "delete_temp_files": true,
+      "archive_logs": true,
+      "update_roadmap": true,
+      "notify": true
+    },
+    "on_failure": {
+      "preserve_logs": true,
+      "create_debug_snapshot": true,
+      "suggest_fixes": true,
+      "offer_rollback": true
+    }
+  },
+  
+  "memory_schema": {
+    "entries": [
+      {
+        "key": "string",
+        "value": "any",
+        "tags": ["list", "of", "tags"],
+        "timestamp": "ISO8601"
+      }
+    ]
+  },
+  
+  "roadmap_schema": {
+    "milestones": [
+      {
+        "name": "string",
+        "tasks": ["list"],
+        "status": "pending|in_progress|completed",
+        "due_date": "ISO8601"
+      }
+    ]
+  }
+}
