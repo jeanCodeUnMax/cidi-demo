@@ -3,6 +3,8 @@
 ## Objectif
 Créer un site portfolio personnel moderne et élégant pour présenter mes compétences et projets.
 
+> 🔄 Test de génération - $(date)
+
 ## Pages Requises
 
 ### 1. Page d'Accueil
