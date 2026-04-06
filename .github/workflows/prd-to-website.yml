@@ -35,11 +35,15 @@ jobs:
         run: |
           pip install requests
 
-      # 4. Installer Ollama
-      - name: Install Ollama
+      # 4. Installer et démarrer Ollama
+      - name: Install and start Ollama
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
-          ollama --version
+          # Démarrer le serveur Ollama en arrière-plan
+          ollama serve &
+          # Attendre que le serveur soit prêt
+          sleep 5
+          curl -s http://localhost:11434/api/tags || echo "Serveur non prêt"
 
       # 5. Générer le site web via Ollama Cloud (model:cloud = pas de clé API)
       - name: Generate website from PRD
@@ -60,7 +64,7 @@ jobs:
           git diff --quiet && git diff --staged --quiet || git commit -m "🤀 Site web généré à partir du PRD [skip ci]"
           git push
 
-      # 6. Afficher le résultat
+      # 7. Afficher le résultat
       - name: Show generated files
         run: |
           echo "Fichiers générés:"
