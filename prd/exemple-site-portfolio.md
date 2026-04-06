@@ -3,7 +3,7 @@
 ## Objectif
 Créer un site portfolio personnel moderne et élégant pour présenter mes compétences et projets.
 
-> 🔄 Test de génération - v4 (llama3.2:1b)
+> 🔄 Test de génération - v5 (minimax-m2.7:cloud 200K)
 
 ## Pages Requises
 
