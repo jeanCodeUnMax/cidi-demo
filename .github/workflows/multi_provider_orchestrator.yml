@@ -14,9 +14,15 @@ on:
   workflow_dispatch:
     inputs:
       input_file:
-        description: 'Fichier d\'entrée (ideas/*.md ou prd/*.md)'
+        description: "Fichier d'entrée (ideas/*.md ou prd/*.md)"
         required: false
         default: ''
+
+# GitHub Secrets requis:
+# MISTRAL_API_KEY - Clé API Mistral
+# GROQ_API_KEY - Clé API Groq
+# GOOGLE_API_KEY - Clé API Google Gemini
+# Pour configurer: Settings > Secrets and variables > Actions > New repository secret
 
 permissions:
   contents: write
