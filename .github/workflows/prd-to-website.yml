@@ -1,5 +1,9 @@
 name: PRD to Website Generator
 
+# Permissions nécessaires pour pousser les changements
+permissions:
+  contents: write
+
 # Déclenchement: quand un fichier PRD est poussé dans prd/
 on:
   push:
