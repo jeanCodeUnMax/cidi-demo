@@ -131,4 +131,6 @@ graph LR
 MIT
 
 [![Auto-Repair System](https://github.com/jeanCodeUnMax/cidi-demo/actions/workflows/auto_repair.yml/badge.svg)](https://github.com/jeanCodeUnMax/cidi-demo/actions/workflows/auto_repair.yml)
+[![Self-Healing AI Orchestrator](https://github.com/jeanCodeUnMax/cidi-demo/actions/workflows/self_healing_orchestrator.yml/badge.svg?branch=master)](https://github.com/jeanCodeUnMax/cidi-demo/actions/workflows/self_healing_orchestrator.yml)
+
 
