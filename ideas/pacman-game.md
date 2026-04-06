@@ -34,5 +34,6 @@ Un document PRD complet et professionnel prêt à être implémenté.
 - Sons et effets visuels
 - Tableau des high scores
 - Animation fluide du Pac-Man
+- Power-ups avec effets visuels
 
 > 🎮 v4 - Gestion erreurs Ollama + STATUS.md
