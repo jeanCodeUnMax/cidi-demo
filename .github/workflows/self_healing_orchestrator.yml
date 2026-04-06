@@ -88,33 +88,62 @@ jobs:
         env:
           OLLAMA_HOST: http://localhost:11434
           MODEL_NAME: minimax-m2.7:cloud
+          INPUT_FILE: ${{ steps.detect.outputs.file }}
         run: |
+          echo "📄 Processing: $INPUT_FILE"
+          
           python -c "
           import sys
+          import os
           sys.path.insert(0, '.')
+          
+          input_file = os.environ.get('INPUT_FILE', 'prd/exemple-site-portfolio.md')
+          print(f'Processing: {input_file}')
+          
           from system.state_manager import StateManager
           from system.auto_healing import AutoHealingSystem
-          from scripts.multi_agent_orchestrator import MultiAgentOrchestrator
           
           # Initialize
           sm = StateManager('.')
           healer = AutoHealingSystem(sm)
           
-          # Execute with healing
-          def run_orchestrator():
-              orch = MultiAgentOrchestrator()
-              with open('${{ steps.detect.outputs.file }}', 'r') as f:
-                  return orch.run(f.read())
+          # Read PRD
+          with open(input_file, 'r', encoding='utf-8') as f:
+              prd_content = f.read()
           
-          def fix_timeout(error, attempt):
-              # Auto-fix: increase timeout
-              return 'Increased timeout and simplified prompt'
+          print(f'PRD loaded: {len(prd_content)} characters')
           
-          result = healer.execute_with_healing(
-              'orchestration',
-              run_orchestrator,
-              fix_timeout
-          )
+          # Update state
+          sm.update_phase('research', 'running')
+          
+          # Try to use multi-agent orchestrator
+          try:
+              from scripts.multi_agent_orchestrator import MultiAgentOrchestrator
+              
+              def run_orchestrator():
+                  orch = MultiAgentOrchestrator()
+                  return orch.run(prd_content)
+              
+              def fix_timeout(error, attempt):
+                  return 'Simplified prompt and increased timeout'
+              
+              result = healer.execute_with_healing(
+                  'orchestration',
+                  run_orchestrator,
+                  fix_timeout
+              )
+              
+          except Exception as e:
+              print(f'Multi-agent failed, using fallback: {e}')
+              
+              # Fallback: use simple generator
+              from scripts.generate_website import call_ollama_cloud, extract_html, save_output
+              
+              response = call_ollama_cloud(prd_content)
+              html = extract_html(response)
+              output_path = save_output(html, os.path.basename(input_file))
+              
+              result = {'success': True, 'result': str(output_path), 'attempts': 1}
           
           # Update state
           if result['success']:
@@ -123,10 +152,6 @@ jobs:
           else:
               sm.update_phase('development', 'failed', result.get('error'))
               print('❌ Orchestration failed')
-              
-              # Offer rollback
-              if result.get('rollback_available'):
-                  print('💡 Rollback available')
           
           # Save report
           import json
@@ -152,10 +177,25 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          
+          # Pull les changements récents pour éviter les conflits
+          git pull --rebase origin master || git pull --rebase origin main || true
+          
           git add output/ .state/ logs/
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "🤖 Project generated with auto-healing [skip ci]"
-          git push
+          
+          # Push avec retry en cas de conflit
+          for i in 1 2 3; do
+            if git push; then
+              echo "✓ Push successful"
+              break
+            else
+              echo "⚠️ Push failed, retrying... (attempt $i)"
+              git pull --rebase origin master || git pull --rebase origin main || true
+              sleep 5
+            fi
+          done
 
       # 9. Cleanup on Success
       - name: Cleanup on Success
