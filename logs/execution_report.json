@@ -13,14 +13,14 @@
         "attempt": 1,
         "error": "'message'",
         "fix": "Simplified prompt and increased timeout",
-        "timestamp": "2026-04-06T15:18:24.352432"
+        "timestamp": "2026-04-06T15:22:50.007772"
       },
       {
         "task": "orchestration",
         "attempt": 2,
         "error": "'message'",
         "fix": "Simplified prompt and increased timeout",
-        "timestamp": "2026-04-06T15:18:29.435324"
+        "timestamp": "2026-04-06T15:22:55.083094"
       }
     ],
     "common_patterns": {
@@ -36,7 +36,7 @@
     "phases": {
       "research": {
         "status": "running",
-        "attempts": 2,
+        "attempts": 4,
         "errors": []
       },
       "planning": {
@@ -50,6 +50,10 @@
         "errors": [
           {
             "timestamp": "2026-04-06T15:18:34.521927",
+            "message": "'message'"
+          },
+          {
+            "timestamp": "2026-04-06T15:23:00.158037",
             "message": "'message'"
           }
         ]
@@ -66,9 +70,9 @@
       }
     },
     "statistics": {
-      "total_tasks": 3,
+      "total_tasks": 6,
       "completed": 0,
-      "failed": 3,
+      "failed": 6,
       "success_rate": 0.0
     },
     "artifacts": [],
@@ -81,6 +85,10 @@
     "recent_errors": [
       {
         "timestamp": "2026-04-06T15:18:34.521927",
+        "message": "'message'"
+      },
+      {
+        "timestamp": "2026-04-06T15:23:00.158037",
         "message": "'message'"
       }
     ]

@@ -1,13 +1,13 @@
 {
   "project_name": "",
   "created_at": "2026-04-06T15:18:23.452995",
-  "updated_at": "2026-04-06T15:23:00.158045",
+  "updated_at": "2026-04-06T15:22:49.538872",
   "status": "idle",
-  "current_phase": "development",
+  "current_phase": "research",
   "phases": {
     "research": {
       "status": "running",
-      "attempts": 4,
+      "attempts": 3,
       "errors": []
     },
     "planning": {
@@ -21,10 +21,6 @@
       "errors": [
         {
           "timestamp": "2026-04-06T15:18:34.521927",
-          "message": "'message'"
-        },
-        {
-          "timestamp": "2026-04-06T15:23:00.158037",
           "message": "'message'"
         }
       ]
@@ -62,30 +58,9 @@
       "error": "'message'",
       "timestamp": "2026-04-06T15:18:34.521452",
       "success": false
-    },
-    {
-      "name": "orchestration",
-      "attempt": 1,
-      "error": "'message'",
-      "timestamp": "2026-04-06T15:22:50.007381",
-      "success": false
-    },
-    {
-      "name": "orchestration",
-      "attempt": 2,
-      "error": "'message'",
-      "timestamp": "2026-04-06T15:22:55.082733",
-      "success": false
-    },
-    {
-      "name": "orchestration",
-      "attempt": 3,
-      "error": "'message'",
-      "timestamp": "2026-04-06T15:23:00.157567",
-      "success": false
     }
   ],
   "artifacts": [],
   "rollback_available": true,
-  "last_successful_state": ".state/history/state_20260406_152300.json"
+  "last_successful_state": ".state/history/state_20260406_152249.json"
 }
