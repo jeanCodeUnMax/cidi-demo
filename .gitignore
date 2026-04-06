@@ -27,3 +27,9 @@ Thumbs.db
 # Temp
 *.tmp
 *.temp
+
+# API Keys (NEVER COMMIT)
+llm_providers.json
+.env
+*.key
+secrets.json

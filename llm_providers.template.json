@@ -1,0 +1,55 @@
+{
+  "providers": {
+    "ollama_local": {
+      "name": "Ollama Local",
+      "models": ["llama3.2:1b", "llama3.2", "phi3:mini", "mistral:7b"],
+      "requires_auth": false,
+      "base_url": "http://localhost:11434",
+      "free": true
+    },
+    "openrouter": {
+      "name": "OpenRouter",
+      "models": [
+        "meta-llama/llama-3.2-3b-instruct:free",
+        "mistralai/mistral-7b-instruct:free",
+        "google/gemma-7b-it:free"
+      ],
+      "requires_auth": true,
+      "base_url": "https://openrouter.ai/api/v1",
+      "free": true,
+      "auth_env": "OPENROUTER_API_KEY"
+    },
+    "mistral": {
+      "name": "Mistral AI",
+      "models": ["mistral-tiny", "mistral-small"],
+      "requires_auth": true,
+      "base_url": "https://api.mistral.ai/v1",
+      "free": true,
+      "auth_env": "MISTRAL_API_KEY"
+    },
+    "groq": {
+      "name": "Groq",
+      "models": ["llama-3.2-1b-preview", "llama-3.2-3b-preview", "mixtral-8x7b-32768"],
+      "requires_auth": true,
+      "base_url": "https://api.groq.com/openai/v1",
+      "free": true,
+      "auth_env": "GROQ_API_KEY"
+    },
+    "google": {
+      "name": "Google Gemini",
+      "models": ["gemini-flash-latest", "gemini-pro"],
+      "requires_auth": true,
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "free": true,
+      "auth_env": "GOOGLE_API_KEY"
+    }
+  },
+  "priority": ["ollama_local", "openrouter", "mistral", "groq", "google"],
+  "api_keys": {
+    "openrouter": "YOUR_OPENROUTER_KEY_HERE",
+    "mistral": "YOUR_MISTRAL_KEY_HERE",
+    "groq": "YOUR_GROQ_KEY_HERE",
+    "google": "YOUR_GOOGLE_KEY_HERE"
+  },
+  "_comment": "Copy this file to llm_providers.json and add your API keys"
+}

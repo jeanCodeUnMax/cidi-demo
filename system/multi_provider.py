@@ -56,6 +56,14 @@ class MultiProviderClient:
             "base_url": "https://api.groq.com/openai/v1",
             "free": True,
             "auth_env": "GROQ_API_KEY"
+        },
+        "google": {
+            "name": "Google Gemini",
+            "models": ["gemini-flash-latest", "gemini-pro"],
+            "requires_auth": True,
+            "base_url": "https://generativelanguage.googleapis.com/v1beta",
+            "free": True,
+            "auth_env": "GOOGLE_API_KEY"
         }
     }
     
@@ -157,6 +165,8 @@ class MultiProviderClient:
             return self._call_mistral(model, prompt)
         elif provider_id == "groq":
             return self._call_groq(model, prompt)
+        elif provider_id == "google":
+            return self._call_google(model, prompt)
         else:
             raise ValueError(f"Unsupported provider: {provider_id}")
     
@@ -275,6 +285,32 @@ class MultiProviderClient:
             raise Exception(f"Groq error: {result['error']}")
         
         return result["choices"][0]["message"]["content"]
+    
+    def _call_google(self, model: str, prompt: str) -> str:
+        """Appelle Google Gemini"""
+        
+        api_key = self.config["api_keys"].get("google")
+        if not api_key:
+            raise Exception("GOOGLE_API_KEY not set")
+        
+        response = requests.post(
+            f"{self.PROVIDERS['google']['base_url']}/models/{model}:generateContent",
+            headers={
+                "Content-Type": "application/json",
+                "X-goog-api-key": api_key
+            },
+            json={
+                "contents": [{"parts": [{"text": prompt}]}]
+            },
+            timeout=120
+        )
+        
+        result = response.json()
+        
+        if "error" in result:
+            raise Exception(f"Google error: {result['error']}")
+        
+        return result["candidates"][0]["content"]["parts"][0]["text"]
     
     def set_api_key(self, provider: str, api_key: str):
         """Définit une clé API pour un provider"""
