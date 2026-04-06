@@ -129,3 +129,6 @@ graph LR
 ## 📄 Licence
 
 MIT
+
+[![Auto-Repair System](https://github.com/jeanCodeUnMax/cidi-demo/actions/workflows/auto_repair.yml/badge.svg)](https://github.com/jeanCodeUnMax/cidi-demo/actions/workflows/auto_repair.yml)
+
