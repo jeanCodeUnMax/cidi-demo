@@ -159,13 +159,28 @@ Utilise les meilleures pratiques actuelles.
     def run(self, input_file: str):
         """Point d'entrée principal"""
         
+        # Valider l'input
+        if not input_file or input_file == "." or input_file == "":
+            raise ValueError("Aucun fichier spécifié")
+        
         # Lire le fichier d'entrée
         input_path = Path(input_file)
         if not input_path.exists():
             raise FileNotFoundError(f"Fichier non trouvé: {input_file}")
         
+        if input_path.is_dir():
+            raise ValueError(f"Le chemin est un dossier, pas un fichier: {input_file}")
+        
+        # Vérifier l'extension
+        if input_path.suffix not in ['.md', '.txt']:
+            print(f"⚠️ Attention: fichier non standard ({input_path.suffix})")
+        
+        print(f"📄 Traitement du fichier: {input_file}")
+        
         with open(input_path, 'r', encoding='utf-8') as f:
             content = f.read()
+        
+        print(f"📏 Taille du contenu: {len(content)} caractères")
         
         # Détecter le type
         project_type = self.detect_project_type(content)

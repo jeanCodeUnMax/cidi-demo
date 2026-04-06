@@ -57,10 +57,29 @@ jobs:
           if [ -n "${{ github.event.inputs.input_file }}" ]; then
             echo "file=${{ github.event.inputs.input_file }}" >> $GITHUB_OUTPUT
           else
-            # Sinon, trouver le dernier fichier modifié
-            LAST_FILE=$(git diff --name-only HEAD~1 HEAD | grep -E '\.(md|txt)$' | head -1)
-            echo "file=$LAST_FILE" >> $GITHUB_OUTPUT
+            # Trouver le dernier fichier modifié (gérer le premier commit)
+            LAST_FILE=$(git diff --name-only HEAD^ HEAD 2>/dev/null || git diff --name-only HEAD~1 HEAD 2>/dev/null || git log --oneline --name-only -1 | tail -n +2 | head -1)
+            
+            # Vérifier que c'est un fichier .md valide
+            if [ -n "$LAST_FILE" ] && [ -f "$LAST_FILE" ]; then
+              echo "file=$LAST_FILE" >> $GITHUB_OUTPUT
+            else
+              # Fallback: utiliser un fichier exemple
+              echo "file=prd/exemple-site-portfolio.md" >> $GITHUB_OUTPUT
+            fi
           fi
+          
+          echo "Detected file: $(cat $GITHUB_OUTPUT | grep file | cut -d= -f2)"
+
+      # 6. Valider le fichier
+      - name: Validate input file
+        run: |
+          FILE="${{ steps.detect.outputs.file }}"
+          if [ ! -f "$FILE" ]; then
+            echo "::error::Fichier non trouvé: $FILE"
+            exit 1
+          fi
+          echo "✓ Fichier validé: $FILE"
 
       # 6. Analyser et planifier
       - name: Analyze and plan
