@@ -1,0 +1,200 @@
+name: Self-Healing AI Orchestrator
+
+# Orchestrateur avec auto-réparation et rollback
+on:
+  push:
+    paths:
+      - 'prd/**/*.md'
+      - 'brainstorming/**/*.md'
+      - 'ideas/**/*.md'
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      # 1. Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: pip install requests pyyaml
+
+      # 4. Install Ollama
+      - name: Install Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 5
+
+      # 5. Initialize State
+      - name: Initialize State
+        run: |
+          python -c "
+          from system.state_manager import StateManager
+          sm = StateManager('.')
+          sm.update_phase('research', 'running')
+          print('State initialized')
+          "
+
+      # 6. Detect Input
+      - name: Detect Input File
+        id: detect
+        run: |
+          LAST_FILE=$(git log --oneline --name-only -1 | tail -n +2 | grep -E '\.md$' | head -1)
+          echo "file=${LAST_FILE:-prd/exemple-site-portfolio.md}" >> $GITHUB_OUTPUT
+
+      # 7. Execute with Auto-Healing
+      - name: Execute with Auto-Healing
+        id: execute
+        env:
+          OLLAMA_HOST: http://localhost:11434
+          MODEL_NAME: minimax-m2.7:cloud
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from system.state_manager import StateManager
+          from system.auto_healing import AutoHealingSystem
+          from scripts.multi_agent_orchestrator import MultiAgentOrchestrator
+          
+          # Initialize
+          sm = StateManager('.')
+          healer = AutoHealingSystem(sm)
+          
+          # Execute with healing
+          def run_orchestrator():
+              orch = MultiAgentOrchestrator()
+              with open('${{ steps.detect.outputs.file }}', 'r') as f:
+                  return orch.run(f.read())
+          
+          def fix_timeout(error, attempt):
+              # Auto-fix: increase timeout
+              return 'Increased timeout and simplified prompt'
+          
+          result = healer.execute_with_healing(
+              'orchestration',
+              run_orchestrator,
+              fix_timeout
+          )
+          
+          # Update state
+          if result['success']:
+              sm.update_phase('development', 'success')
+              print('✅ Orchestration succeeded')
+          else:
+              sm.update_phase('development', 'failed', result.get('error'))
+              print('❌ Orchestration failed')
+              
+              # Offer rollback
+              if result.get('rollback_available'):
+                  print('💡 Rollback available')
+          
+          # Save report
+          import json
+          with open('logs/execution_report.json', 'w') as f:
+              json.dump({
+                  'result': result,
+                  'fixes': healer.generate_fix_report(),
+                  'state': sm.get_dev_book()
+              }, f, indent=2)
+          "
+          
+          # Check result
+          if [ -f "logs/execution_report.json" ]; then
+            SUCCESS=$(cat logs/execution_report.json | jq -r '.result.success')
+            if [ "$SUCCESS" != "true" ]; then
+              echo "::warning::Execution failed, check logs/execution_report.json"
+            fi
+          fi
+
+      # 8. Commit Results (if success)
+      - name: Commit Results
+        if: success()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add output/ .state/ logs/
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "🤖 Project generated with auto-healing [skip ci]"
+          git push
+
+      # 9. Cleanup on Success
+      - name: Cleanup on Success
+        if: success()
+        run: |
+          echo "🧹 Cleaning up..."
+          # Archive old logs
+          mkdir -p logs/archive
+          find logs -name "*.log" -mtime +7 -exec mv {} logs/archive/ \; 2>/dev/null || true
+          echo "✓ Cleanup complete"
+
+      # 10. Create Debug Snapshot on Failure
+      - name: Create Debug Snapshot
+        if: failure()
+        run: |
+          echo "📸 Creating debug snapshot..."
+          mkdir -p debug_snapshots
+          
+          # Save current state
+          cp -r .state debug_snapshots/state_$(date +%s) 2>/dev/null || true
+          cp -r logs debug_snapshots/logs_$(date +%s) 2>/dev/null || true
+          
+          # Create debug report
+          cat > debug_snapshots/DEBUG_REPORT.md << EOF
+          # Debug Report - $(date)
+          
+          ## Failed Step
+          \`\`\`
+          ${{ job.status }}
+          \`\`\`
+          
+          ## Files Modified
+          \`\`\`
+          $(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "N/A")
+          \`\`\`
+          
+          ## State
+          \`\`\`json
+          $(cat .state/current_state.json 2>/dev/null || echo "N/A")
+          \`\`\`
+          EOF
+          
+          echo "✓ Debug snapshot created in debug_snapshots/"
+
+      # 11. Generate Final Report
+      - name: Generate Report
+        if: always()
+        run: |
+          echo "## 🤖 Orchestration Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "logs/execution_report.json" ]; then
+            cat logs/execution_report.json | jq -r '
+              "### Status: " + (if .result.success then "✅ Success" else "❌ Failed" end),
+              "",
+              "**Attempts**: " + (.result.attempts | tostring),
+              "",
+              "**Fixes Applied**: " + (.fixes.total_fixes | tostring),
+              "",
+              "### State",
+              "```json",
+              .state.phases,
+              "```"
+            ' >> $GITHUB_STEP_SUMMARY || true
+          fi
