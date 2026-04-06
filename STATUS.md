@@ -1,6 +1,6 @@
 # 🤖 AI Orchestrator Status
 
-> Last updated: 2026-04-06 16:09:31 UTC
+> Last updated: 2026-04-06 16:11:13 UTC
 
 ## ❌ Global Status: **FAILED**
 
@@ -20,9 +20,9 @@
 
 | Phase | Status | Attempts | Errors |
 |-------|--------|----------|--------|
-| **Research** | 🔄 running | 8 | 0 |
+| **Research** | 🔄 running | 10 | 0 |
 | **Planning** | ⏳ pending | 0 | 0 |
-| **Development** | ❌ failed | 0 | 4 |
+| **Development** | ❌ failed | 0 | 5 |
 | **Testing** | ⏳ pending | 0 | 0 |
 | **Deployment** | ⏳ pending | 0 | 0 |
 
@@ -30,18 +30,18 @@
 
 ## 📈 Statistics
 
-- **Total Tasks**: 12
+- **Total Tasks**: 15
 - **Completed**: 0
-- **Failed**: 12
+- **Failed**: 15
 - **Success Rate**: 0.0%
 
 ---
 
 ## 🚨 Recent Errors
 
-- `2026-04-06T15:23:00.158037`: 'message'
 - `2026-04-06T16:03:07.153310`: Format de réponse inattendu: dict_keys(['error'])
 - `2026-04-06T16:09:31.350179`: Ollama error: unauthorized
+- `2026-04-06T16:11:12.545329`: Ollama error: unauthorized
 
 ---
 
