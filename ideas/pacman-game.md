@@ -29,4 +29,4 @@ Générer un PRD complet avec :
 ## Attendu
 Un document PRD complet et professionnel prêt à être implémenté.
 
-> 🎮 v2 - Relance avec parsing corrigé
+> 🎮 v3 - Corrections détection + parsing
