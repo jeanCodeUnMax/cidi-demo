@@ -71,6 +71,10 @@ FORMAT:
             )
             result = response.json()
             
+            # Gérer les erreurs Ollama
+            if "error" in result:
+                raise ValueError(f"Ollama error: {result['error']}")
+            
             # Gérer différents formats de réponse Ollama
             if "message" in result and "content" in result["message"]:
                 html = result["message"]["content"]

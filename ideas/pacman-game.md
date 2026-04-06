@@ -29,4 +29,9 @@ Générer un PRD complet avec :
 ## Attendu
 Un document PRD complet et professionnel prêt à être implémenté.
 
+## Détails Supplémentaires
+- Interface utilisateur intuitive
+- Sons et effets visuels
+- Tableau des high scores
+
 > 🎮 v3 - Corrections détection + parsing

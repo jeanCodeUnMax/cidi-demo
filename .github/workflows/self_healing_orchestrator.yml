@@ -256,6 +256,9 @@ jobs:
       - name: Generate Report
         if: always()
         run: |
+          # Générer le STATUS.md visible
+          python scripts/generate_status.py
+          
           echo "## 🤖 Orchestration Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -273,3 +276,18 @@ jobs:
               "```"
             ' >> $GITHUB_STEP_SUMMARY || true
           fi
+
+      # 12. Commit Status Report
+      - name: Commit Status Report
+        if: always()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git pull --rebase origin master || git pull --rebase origin main || true
+          
+          git add STATUS.md logs/ .state/
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "📊 Update STATUS.md [skip ci]"
+          
+          git push || true
