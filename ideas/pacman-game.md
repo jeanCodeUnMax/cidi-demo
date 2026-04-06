@@ -33,5 +33,6 @@ Un document PRD complet et professionnel prêt à être implémenté.
 - Interface utilisateur intuitive
 - Sons et effets visuels
 - Tableau des high scores
+- Animation fluide du Pac-Man
 
-> 🎮 v3 - Corrections détection + parsing
+> 🎮 v4 - Gestion erreurs Ollama + STATUS.md
