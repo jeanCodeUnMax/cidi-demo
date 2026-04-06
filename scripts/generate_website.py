@@ -28,20 +28,44 @@ def read_prd(prd_file: str) -> str:
 def call_ollama_cloud(prompt: str) -> str:
     """Appelle Ollama avec un modèle cloud (model:cloud = pas de clé API)"""
     
-    system_prompt = """Tu es un expert en développement web. Ta tâche est de générer du code HTML et CSS complet et fonctionnel basé sur les spécifications fournies.
+    # Charger les skills
+    skills = load_skills()
+    
+    system_prompt = f"""Tu es un expert en développement web avec les compétences suivantes:
 
-RÈGLES:
-1. Génère UNIQUEMENT le code HTML complet avec le CSS intégré dans une balise <style>
-2. Le code doit être prêt à l'emploi, sans placeholder
-3. Utilise des designs modernes et responsive
-4. Inclus toutes les fonctionnalités demandées
-5. Commente le code si nécessaire
+{skills}
 
-Format de réponse attendu:
+CAPACITÉS:
+1. Générer du code HTML5 sémantique et accessible
+2. Créer du CSS3 moderne avec animations et responsive design
+3. Implémenter du JavaScript vanilla pour l'interactivité
+4. Respecter les standards WCAG pour l'accessibilité
+
+RÈGLES STRICTES:
+1. Génère UNIQUEMENT le code HTML complet avec CSS intégré dans <style>
+2. Aucun placeholder - tout doit être fonctionnel
+3. Utilise des designs modernes avec gradients et ombres
+4. Mobile-first responsive
+5. Commente chaque section majeure
+
+FORMAT DE RÉPONSE:
 ```html
 <!DOCTYPE html>
-<html>
-...code complet...
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titre du Site</title>
+    <style>
+        /* Variables CSS */
+        :root {{ --primary: #6c63ff; --secondary: #ff6584; }}
+        
+        /* Styles complets */
+    </style>
+</head>
+<body>
+    <!-- Sections commentées -->
+</body>
 </html>
 ```"""
 

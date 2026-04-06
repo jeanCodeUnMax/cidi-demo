@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "mcp-server-filesystem",
+      "args": ["--root", "./output"],
+      "description": "Permet de lire/écrire des fichiers"
+    },
+    "github": {
+      "command": "mcp-server-github",
+      "args": [],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "Interagit avec GitHub API"
+    },
+    "browser": {
+      "command": "mcp-server-puppeteer",
+      "args": [],
+      "description": "Permet de naviguer et screenshot des pages web"
+    }
+  }
+}
