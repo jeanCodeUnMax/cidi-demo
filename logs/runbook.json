@@ -1,0 +1,21 @@
+{
+  "start_time": "2026-04-06T15:18:34.435923",
+  "agents_status": {
+    "html": "FAILED"
+  },
+  "tasks_completed": [],
+  "errors": [
+    {
+      "timestamp": "2026-04-06T15:18:34.520895",
+      "agent": "html",
+      "level": "ERROR",
+      "message": "\u2717 generate \u00e9chou\u00e9: 'message'"
+    },
+    {
+      "timestamp": "2026-04-06T15:18:34.520938",
+      "agent": "Orchestrator",
+      "level": "ERROR",
+      "message": "\u2717 Workflow \u00e9chou\u00e9: 'message'"
+    }
+  ]
+}

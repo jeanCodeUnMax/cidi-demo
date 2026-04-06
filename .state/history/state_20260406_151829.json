@@ -1,0 +1,47 @@
+{
+  "project_name": "",
+  "created_at": "2026-04-06T15:18:23.452995",
+  "updated_at": "2026-04-06T15:18:24.352082",
+  "status": "idle",
+  "current_phase": "research",
+  "phases": {
+    "research": {
+      "status": "running",
+      "attempts": 2,
+      "errors": []
+    },
+    "planning": {
+      "status": "pending",
+      "attempts": 0,
+      "errors": []
+    },
+    "development": {
+      "status": "pending",
+      "attempts": 0,
+      "errors": []
+    },
+    "testing": {
+      "status": "pending",
+      "attempts": 0,
+      "errors": []
+    },
+    "deployment": {
+      "status": "pending",
+      "attempts": 0,
+      "errors": []
+    }
+  },
+  "completed_tasks": [],
+  "failed_tasks": [
+    {
+      "name": "orchestration",
+      "attempt": 1,
+      "error": "'message'",
+      "timestamp": "2026-04-06T15:18:24.352075",
+      "success": false
+    }
+  ],
+  "artifacts": [],
+  "rollback_available": true,
+  "last_successful_state": ".state/history/state_20260406_151824.json"
+}
