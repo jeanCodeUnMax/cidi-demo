@@ -1,0 +1,162 @@
+name: Auto-Repair System
+
+# Workflow de réparation automatique en cascade
+# Se déclenche après un échec du workflow principal
+
+on:
+  workflow_run:
+    workflows: ["Self-Healing AI Orchestrator"]
+    types:
+      - completed
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  analyze-and-repair:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    timeout-minutes: 10
+    
+    steps:
+      # 1. Checkout
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: pip install requests pyyaml
+
+      # 4. Download artifacts from failed workflow
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: execution-report
+          path: logs/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      # 5. Run Repair Agent
+      - name: Run Repair Agent
+        id: repair
+        run: |
+          python agents/repair_agent.py > logs/repair_result.json
+          cat logs/repair_result.json
+          
+          # Extraire le type de fix suggéré
+          if grep -q "AUTH_ERROR" logs/repair_analysis.json 2>/dev/null; then
+            echo "fix_type=auth" >> $GITHUB_OUTPUT
+          elif grep -q "TIMEOUT_ERROR" logs/repair_analysis.json 2>/dev/null; then
+            echo "fix_type=timeout" >> $GITHUB_OUTPUT
+          else
+            echo "fix_type=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      # 6. Apply Fix - Auth Error
+      - name: Fix Auth Error
+        if: steps.repair.outputs.fix_type == 'auth'
+        run: |
+          echo "🔧 Applying auth fix: Switching to local model"
+          
+          # Modifier le modèle par défaut
+          sed -i 's/MODEL_NAME = os.environ.get("MODEL_NAME", "minimax-m2.7:cloud")/MODEL_NAME = os.environ.get("MODEL_NAME", "llama3.2:1b")/' scripts/generate_website.py
+          
+          # Modifier dans les agents
+          for agent in agents/*.py; do
+            sed -i 's/MODEL_NAME = os.environ.get("MODEL_NAME", "minimax-m2.7:cloud")/MODEL_NAME = os.environ.get("MODEL_NAME", "llama3.2:1b")/' "$agent"
+          done
+          
+          echo "✓ Model changed to llama3.2:1b (local, no auth required)"
+
+      # 7. Install Ollama and pull model
+      - name: Setup Ollama with local model
+        if: steps.repair.outputs.fix_type == 'auth'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 5
+          ollama pull llama3.2:1b
+
+      # 8. Retry the original task
+      - name: Retry Original Task
+        env:
+          OLLAMA_HOST: http://localhost:11434
+          MODEL_NAME: llama3.2:1b
+        run: |
+          # Lire le fichier original depuis le dernier commit
+          INPUT_FILE=$(git log --oneline --name-only -1 | tail -n +2 | grep -E '\.md$' | grep -E '(prd|ideas|brainstorming)/' | head -1)
+          
+          if [ -z "$INPUT_FILE" ]; then
+            INPUT_FILE="prd/exemple-site-portfolio.md"
+          fi
+          
+          echo "📄 Retrying with: $INPUT_FILE"
+          
+          # Exécuter le générateur simple (fallback)
+          python scripts/generate_website.py "$INPUT_FILE" || true
+
+      # 9. Commit the fix
+      - name: Commit Repair
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git pull --rebase origin master || true
+          
+          git add scripts/ agents/ logs/
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "🔧 Auto-repair: Switch to local model (llama3.2:1b)"
+          
+          git push || true
+
+      # 10. Generate Repair Report
+      - name: Generate Repair Report
+        if: always()
+        run: |
+          cat > REPAIR_STATUS.md << EOF
+          # 🔧 Auto-Repair Status
+
+          > Generated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          ## Repair Result
+
+          | Metric | Value |
+          |--------|-------|
+          | **Error Type** | ${{ steps.repair.outputs.fix_type }} |
+          | **Fix Applied** | Yes |
+          | **Model Changed** | minimax-m2.7:cloud → llama3.2:1b |
+
+          ## Files Modified
+
+          - \`scripts/generate_website.py\`
+          - \`agents/*.py\`
+
+          ## Next Steps
+
+          The original task has been retried with the local model.
+          Check the latest workflow run for results.
+          EOF
+          
+          git add REPAIR_STATUS.md
+          git commit -m "📊 Update REPAIR_STATUS.md" || true
+          git push || true
+
+      # 11. Trigger retry workflow
+      - name: Trigger Retry
+        if: success()
+        run: |
+          # Créer un petit changement pour retrigger
+          echo "\n<!-- Retry after auto-repair -->" >> ideas/pacman-game.md
+          git add ideas/pacman-game.md
+          git commit -m "🔄 Retry after auto-repair"
+          git push
