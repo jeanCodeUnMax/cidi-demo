@@ -30,8 +30,8 @@ Un jeu de plateforme 2D inspiré de Super Mario Bros (1985) avec graphismes pixe
 ### Visuels
 - **Style** : Pixel art 16x16 pixels par sprite
 - **Palette** : Couleurs NES authentiques
-- **Animations** : 4 frames pour course, 2 pour saut
-- **Parallax** : 3 couches de scrolling
+- **Animations** : 6 frames pour course, 2 pour saut
+- **Parallax** : 4 couches de scrolling
 - **Particles** : Effets de poussière et étoiles
 
 ---
