@@ -73,7 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeout=60
             )
             result = response.json()
-            js = result["message"]["content"]
+            
+            # Gérer différents formats de réponse Ollama
+            if "message" in result and "content" in result["message"]:
+                js = result["message"]["content"]
+            elif "response" in result:
+                js = result["response"]
+            else:
+                raise ValueError(f"Format de réponse inattendu: {result.keys()}")
             
             self.log(f"JS généré: {len(js)} caractères", "SUCCESS")
             return js
