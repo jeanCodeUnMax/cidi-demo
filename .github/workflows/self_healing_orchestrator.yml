@@ -64,12 +64,24 @@ jobs:
           if [ -n "${{ github.event.inputs.input_file }}" ]; then
             FILE="${{ github.event.inputs.input_file }}"
           else
-            # Trouver le dernier fichier modifié
-            FILE=$(git log --oneline --name-only -1 | tail -n +2 | grep -E '\.md$' | head -1)
+            # Utiliser les fichiers modifiés dans le commit actuel
+            # GitHub fournit la liste des fichiers via l'API
+            FILES_ADDED=$(echo '${{ github.event.commits[0].added }}' | jq -r '.[]' 2>/dev/null | grep -E '\.md$' | head -1)
+            FILES_MODIFIED=$(echo '${{ github.event.commits[0].modified }}' | jq -r '.[]' 2>/dev/null | grep -E '\.md$' | head -1)
             
-            # Fallback si aucun fichier trouvé
-            if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then
-              FILE="prd/exemple-site-portfolio.md"
+            # Priorité aux fichiers ajoutés, puis modifiés
+            if [ -n "$FILES_ADDED" ] && [ -f "$FILES_ADDED" ]; then
+              FILE="$FILES_ADDED"
+            elif [ -n "$FILES_MODIFIED" ] && [ -f "$FILES_MODIFIED" ]; then
+              FILE="$FILES_MODIFIED"
+            else
+              # Fallback: chercher dans le diff du dernier commit
+              FILE=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E '\.md$' | grep -E '(prd|ideas|brainstorming)/' | head -1)
+              
+              # Si toujours rien, utiliser le fichier par défaut
+              if [ -z "$FILE" ] || [ ! -f "$FILE" ]; then
+                FILE="prd/exemple-site-portfolio.md"
+              fi
             fi
           fi
           
