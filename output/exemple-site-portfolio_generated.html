@@ -3,90 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site Portfolio Personnel</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Site généré (mode fallback)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 20px; }
+        p { color: #666; margin-bottom: 15px; }
+        .notice { background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
 </head>
-<body class="dark-mode">
-    <!-- Hero section -->
-    <header>
-        <nav>
-            <ul>
-                <li><a href="#accueil">Accueil</a></li>
-                <li><a href="#compétences">Compétences</a></li>
-                <li><a href="#projets">Projets</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <!-- Page d'Accueil -->
-    <section id="accueil">
-        <div class="hero">
-            <h1>Mon nom est [Nom].</h1>
-            <p>Bienvenue !</p>
-            <img src="profile.jpg" alt="Photo de profil" class="profile-image">
-            <button class="socials">Connectez-vous sur les réseaux sociaux</button>
+<body>
+    <div class="container">
+        <div class="notice">
+            ⚠️ Mode fallback activé - L'API Ollama n'était pas disponible
         </div>
-    </section>
+        <h1>Site web généré automatiquement</h1>
+        <p>Ce site a été créé à partir des spécifications suivantes:</p>
+        <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;">Voici les spécifications d'un site web à créer:
 
-    <!-- Section Compétences -->
-    <section id="compétences">
-        <h2>Compétences</h2>
-        <ul>
-            <li><i class="fas fa-lock"></i> HTML/CSS
-                <span>Niveau 1</span>
-            </li>
-            <li><i class="fas fa-pen-nail"></i> JavaScript
-                <span>Niveau 2</span>
-            </li>
-            <li><i class="fas fa-java-boy"></i> Python
-                <span>Niveau 3</span>
-            </li>
-            <li><i class="fas fa-react"></i> React
-                <span>Niveau 4</span>
-            </li>
-            <li><i class="fas fa-node"></i> Node.js
-                <span>Niveau 5</span>
-            </li>
-        </ul>
-    </section>
+# PRD: Site Portfolio Personnel
 
-    <!-- Section Projets -->
-    <section id="projets">
-        <h2>Projets</h2>
-        <div class="grid-container">
-            <article class="project" data-project-id="1">
-                <img src="" alt="" class="project-image">
-                <div class="project-info">
-                    <h3>Titre du projet</h3>
-                    <p>Brief description du projet</p>
-                    <button class="view-btn">View project</button>
-                </div>
-            </article>
-        </div>
-    </section>
+## Objectif
+Créer un site portfolio personnel moderne et élégant pour présenter mes compétences et projets.
 
-    <!-- Section Contact -->
-    <section id="contact">
-        <form>
-            <label for="nom">Nom:</label>
-            <input type="text" id="nom" name="nom"><br><br>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email"><br><br>
-            <button type="submit">Envoyer</button>
-        </form>
-    </section>
+> 🔄 Test de génération - v5 (minimax-m2.7:cloud 200K)
 
-    <!-- Footer -->
-    <footer class="dark-mode footer">
-        &copy; 2023 [Nom]. All rights reserved.
-        <ul>
-            <li><a href="#" target="_blank" rel="noopener noreferrer">Reseaux sociaux</a></li>
-            <li><a href="#" target="_blank" rel="noopener noreferrer">Contact</a></li>
-        </ul>
-    </footer>
+## Pages Requises
 
-    <!-- JavaScript files -->
-    <script src="script.js"></script>
+### 1. Page d'Accueil
+- Hero section avec nom et titre professionnel
+- Photo de profil (placeholder)
+- Courte bio de 2-3 phrases
+- Boutons vers les réseaux sociaux (LinkedIn, GitHub, Twitter)
+- Design moderne avec animation subtile
+
+##...</pre>
+    </div>
 </body>
 </html>
