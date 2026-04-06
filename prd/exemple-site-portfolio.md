@@ -3,7 +3,7 @@
 ## Objectif
 Créer un site portfolio personnel moderne et élégant pour présenter mes compétences et projets.
 
-> 🔄 Test de génération - v2
+> 🔄 Test de génération - v3 (Ollama server)
 
 ## Pages Requises
 
