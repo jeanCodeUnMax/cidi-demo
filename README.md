@@ -2,6 +2,8 @@
 
 Système automatisé qui génère des sites web HTML/CSS à partir de fichiers PRD (Product Requirements Document) en utilisant Ollama et GitHub Actions.
 
+> 🎓 Projet d'apprentissage GitHub Actions - Test de Git Action
+
 ## 📁 Structure du Projet
 
 ```

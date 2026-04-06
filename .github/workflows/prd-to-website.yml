@@ -6,6 +6,7 @@ on:
     paths:
       - 'prd/**/*.md'
     branches:
+      - master
       - main
   workflow_dispatch:  # Permet aussi le déclenchement manuel
 
