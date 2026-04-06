@@ -38,18 +38,19 @@
     },
     "groq": {
       "name": "Groq",
-      "models": ["llama-3.2-1b-preview", "llama-3.2-3b-preview", "mixtral-8x7b-32768"],
+      "models": ["llama-3.3-70b-versatile", "llama3-8b-8192", "mixtral-8x7b-32768"],
       "requires_auth": true,
       "base_url": "https://api.groq.com/openai/v1",
       "free": true,
       "auth_env": "GROQ_API_KEY"
     }
   },
-  "priority": ["ollama_local", "openrouter", "mistral", "groq", "ollama_cloud"],
+  "priority": ["ollama_local", "openrouter", "mistral", "groq", "google", "ollama_cloud"],
   "api_keys": {
-    "openrouter": "",
-    "mistral": "",
-    "groq": "",
+    "openrouter": "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",
+    "mistral": "LcmiaetZT58FgcEqS1IH6NqhLnDrUVhB",
+    "groq": "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",
+    "google": "AIzaSyAjMsQWGqXKvSbksWDEIn9HCDM2y3kiP1c",
     "ollama_cloud": ""
   },
   "_comment": "Set your API keys in api_keys section or via environment variables"

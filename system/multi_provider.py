@@ -51,7 +51,7 @@ class MultiProviderClient:
         },
         "groq": {
             "name": "Groq",
-            "models": ["llama-3.2-1b-preview", "llama-3.2-3b-preview", "mixtral-8x7b-32768"],
+            "models": ["llama-3.3-70b-versatile", "llama3-8b-8192", "mixtral-8x7b-32768"],
             "requires_auth": True,
             "base_url": "https://api.groq.com/openai/v1",
             "free": True,

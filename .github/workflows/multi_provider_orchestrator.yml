@@ -1,0 +1,429 @@
+name: Main Orchestrator
+
+# Orchestrateur principal qui découpe les tâches et déclenche les agents
+# Chaque agent utilise un provider différent (Mistral, Groq, Google)
+
+on:
+  push:
+    paths:
+      - 'ideas/*.md'
+      - 'prd/*.md'
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+    inputs:
+      input_file:
+        description: 'Fichier d\'entrée (ideas/*.md ou prd/*.md)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  # 1. Orchestrateur - Analyse et découpe les tâches
+  orchestrate:
+    runs-on: ubuntu-latest
+    outputs:
+      html_task: ${{ steps.split.outputs.html_task }}
+      css_task: ${{ steps.split.outputs.css_task }}
+      js_task: ${{ steps.split.outputs.js_task }}
+      input_file: ${{ steps.detect.outputs.file }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Detect Input File
+        id: detect
+        run: |
+          if [ -n "${{ github.event.inputs.input_file }}" ]; then
+            FILE="${{ github.event.inputs.input_file }}"
+          else
+            FILE=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E '\.md$' | grep -E '(prd|ideas)/' | head -1)
+            [ -z "$FILE" ] && FILE="prd/exemple-site-portfolio.md"
+          fi
+          echo "file=$FILE" >> $GITHUB_OUTPUT
+          echo "📄 Input: $FILE"
+
+      - name: Split Tasks
+        id: split
+        run: |
+          # Lire le fichier d'entrée
+          CONTENT=$(cat "${{ steps.detect.outputs.file }}")
+          
+          # Créer les tâches pour chaque agent
+          mkdir -p tasks
+          
+          # Tâche HTML (pour Mistral)
+          echo "$CONTENT" > tasks/html_task.md
+          echo "html_task=tasks/html_task.md" >> $GITHUB_OUTPUT
+          
+          # Tâche CSS (pour Groq)
+          echo "$CONTENT" > tasks/css_task.md
+          echo "css_task=tasks/css_task.md" >> $GITHUB_OUTPUT
+          
+          # Tâche JS (pour Google)
+          echo "$CONTENT" > tasks/js_task.md
+          echo "js_task=tasks/js_task.md" >> $GITHUB_OUTPUT
+          
+          echo "✅ Tasks created"
+
+      - name: Upload Tasks
+        uses: actions/upload-artifact@v4
+        with:
+          name: tasks
+          path: tasks/
+
+  # 2. Agent HTML - Utilise Mistral
+  agent-html:
+    needs: orchestrate
+    runs-on: ubuntu-latest
+    outputs:
+      html_file: ${{ steps.generate.outputs.file }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Tasks
+        uses: actions/download-artifact@v4
+        with:
+          name: tasks
+          path: tasks/
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Setup API Keys
+        env:
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+        run: |
+          mkdir -p config
+          cat > config/llm_providers.json << EOF
+          {
+            "api_keys": {
+              "mistral": "$MISTRAL_API_KEY"
+            }
+          }
+          EOF
+
+      - name: Generate HTML with Mistral
+        id: generate
+        run: |
+          python -c "
+          import requests
+          
+          # Lire la tâche
+          with open('tasks/html_task.md', 'r') as f:
+              task = f.read()
+          
+          # Appeler Mistral
+          response = requests.post(
+              'https://api.mistral.ai/v1/chat/completions',
+              headers={'Authorization': 'Bearer ${{ secrets.MISTRAL_API_KEY }}'},
+              json={
+                  'model': 'mistral-small',
+                  'messages': [
+                      {'role': 'system', 'content': '''Tu es un expert HTML. Génère UNIQUEMENT le code HTML sémantique et accessible.
+                      
+                      RÈGLES:
+                      - Structure HTML5 complète avec header, main, footer
+                      - Classes CSS sémantiques (BEM)
+                      - Pas de CSS inline
+                      - Commentaires pour les sections
+                      - Responsive design'''},
+                      {'role': 'user', 'content': f'Génère le HTML pour:\\n{task}'}
+                  ]
+              },
+              timeout=120
+          )
+          
+          result = response.json()
+          html = result['choices'][0]['message']['content']
+          
+          # Sauvegarder
+          with open('output/index.html', 'w') as f:
+              f.write(html)
+          
+          print(f'✅ HTML généré: {len(html)} caractères')
+          "
+          
+          echo "file=output/index.html" >> $GITHUB_OUTPUT
+
+      - name: Upload HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-output
+          path: output/index.html
+
+  # 3. Agent CSS - Utilise Groq
+  agent-css:
+    needs: orchestrate
+    runs-on: ubuntu-latest
+    outputs:
+      css_file: ${{ steps.generate.outputs.file }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Tasks
+        uses: actions/download-artifact@v4
+        with:
+          name: tasks
+          path: tasks/
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate CSS with Groq
+        id: generate
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python -c "
+          import requests
+          
+          # Lire la tâche
+          with open('tasks/css_task.md', 'r') as f:
+              task = f.read()
+          
+          # Appeler Groq
+          response = requests.post(
+              'https://api.groq.com/openai/v1/chat/completions',
+              headers={'Authorization': 'Bearer $GROQ_API_KEY'},
+              json={
+                  'model': 'llama-3.3-70b-versatile',
+                  'messages': [
+                      {'role': 'system', 'content': '''Tu es un expert CSS. Génère UNIQUEMENT le code CSS moderne.
+                      
+                      RÈGLES:
+                      - CSS moderne avec variables CSS
+                      - Mobile-first responsive
+                      - Animations subtiles
+                      - Dark mode support
+                      - BEM naming convention'''},
+                      {'role': 'user', 'content': f'Génère le CSS pour:\\n{task}'}
+                  ]
+              },
+              timeout=120
+          )
+          
+          result = response.json()
+          css = result['choices'][0]['message']['content']
+          
+          # Sauvegarder
+          with open('output/styles.css', 'w') as f:
+              f.write(css)
+          
+          print(f'✅ CSS généré: {len(css)} caractères')
+          "
+          
+          echo "file=output/styles.css" >> $GITHUB_OUTPUT
+
+      - name: Upload CSS
+        uses: actions/upload-artifact@v4
+        with:
+          name: css-output
+          path: output/styles.css
+
+  # 4. Agent JS - Utilise Google Gemini
+  agent-js:
+    needs: orchestrate
+    runs-on: ubuntu-latest
+    outputs:
+      js_file: ${{ steps.generate.outputs.file }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Tasks
+        uses: actions/download-artifact@v4
+        with:
+          name: tasks
+          path: tasks/
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate JS with Google Gemini
+        id: generate
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          python -c "
+          import requests
+          
+          # Lire la tâche
+          with open('tasks/js_task.md', 'r') as f:
+              task = f.read()
+          
+          # Appeler Google Gemini
+          response = requests.post(
+              'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
+              headers={
+                  'Content-Type': 'application/json',
+                  'X-goog-api-key': '$GOOGLE_API_KEY'
+              },
+              json={
+                  'contents': [{
+                      'parts': [{
+                          'text': f'''Tu es un expert JavaScript. Génère UNIQUEMENT le code JS vanilla.
+                          
+                          RÈGLES:
+                          - JavaScript vanilla (ES6+)
+                          - Pas de framework
+                          - Gestion des erreurs
+                          - Commentaires JSDoc
+                          - Performance optimisée
+                          
+                          Génère le JS pour:
+                          {task}'''
+                      }]
+                  }]
+              },
+              timeout=120
+          )
+          
+          result = response.json()
+          js = result['candidates'][0]['content']['parts'][0]['text']
+          
+          # Sauvegarder
+          with open('output/script.js', 'w') as f:
+              f.write(js)
+          
+          print(f'✅ JS généré: {len(js)} caractères')
+          "
+          
+          echo "file=output/script.js" >> $GITHUB_OUTPUT
+
+      - name: Upload JS
+        uses: actions/upload-artifact@v4
+        with:
+          name: js-output
+          path: output/script.js
+
+  # 5. Fusion et Déploiement
+  fuse-and-deploy:
+    needs: [agent-html, agent-css, agent-js]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Fuse Components
+        run: |
+          mkdir -p output site
+          
+          # Copier les fichiers générés
+          cp artifacts/html-output/index.html output/ 2>/dev/null || echo "<!-- HTML pending -->" > output/index.html
+          cp artifacts/css-output/styles.css output/ 2>/dev/null || echo "/* CSS pending */" > output/styles.css
+          cp artifacts/js-output/script.js output/ 2>/dev/null || echo "// JS pending" > output/script.js
+          
+          # Créer le site final avec CSS et JS intégrés
+          if [ -f output/index.html ]; then
+            # Insérer le CSS
+            sed -i '/<\/head>/i <link rel="stylesheet" href="styles.css">' output/index.html
+            
+            # Insérer le JS
+            sed -i '/<\/body>/i <script src="script.js"></script>' output/index.html
+          fi
+          
+          # Copier pour GitHub Pages
+          cp -r output/* site/
+          
+          echo "✅ Site fusionné"
+
+      - name: Generate Webbook
+        run: |
+          cat > site/WEBBOOK.md << EOF
+          # 📊 Webbook - Statut de Génération
+
+          > Généré le: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          ## 🤖 Agents Exécutés
+
+          | Agent | Provider | Status |
+          |-------|----------|--------|
+          | HTML | Mistral (mistral-small) | ✅ |
+          | CSS | Groq (llama-3.3-70b-versatile) | ✅ |
+          | JS | Google Gemini (gemini-flash) | ✅ |
+
+          ## 📁 Fichiers Générés
+
+          - \`index.html\` - Structure HTML
+          - \`styles.css\` - Styles CSS
+          - \`script.js\` - Interactivité JS
+
+          ## 🔗 Liens
+
+          - [Voir le site](https://jeancodeunmax.github.io/cidi-demo/)
+          - [Code source](https://github.com/jeanCodeUnMax/cidi-demo)
+
+          ---
+
+          _Généré automatiquement par l'orchestrateur multi-provider_
+          EOF
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+
+      - name: Commit Results
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git pull --rebase origin master || true
+          
+          git add output/ site/
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "🚀 Site généré par multi-provider orchestration"
+          
+          git push || true
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Site Déployé" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "URL: https://jeancodeunmax.github.io/cidi-demo/" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Fichiers" >> $GITHUB_STEP_SUMMARY
+          echo "- \`index.html\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`styles.css\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`script.js\`" >> $GITHUB_STEP_SUMMARY

@@ -45,6 +45,25 @@ jobs:
           curl -fsSL https://ollama.com/install.sh | sh
           ollama serve &
           sleep 5
+          ollama pull llama3.2:1b
+
+      # 4.5 Setup API Keys (from secrets)
+      - name: Setup API Keys
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          # Update llm_providers.json with secrets
+          if [ -n "$OPENROUTER_API_KEY" ]; then
+            jq '.api_keys.openrouter = "'"$OPENROUTER_API_KEY"'"' llm_providers.json > tmp.json && mv tmp.json llm_providers.json
+          fi
+          if [ -n "$MISTRAL_API_KEY" ]; then
+            jq '.api_keys.mistral = "'"$MISTRAL_API_KEY"'"' llm_providers.json > tmp.json && mv tmp.json llm_providers.json
+          fi
+          if [ -n "$GROQ_API_KEY" ]; then
+            jq '.api_keys.groq = "'"$GROQ_API_KEY"'"' llm_providers.json > tmp.json && mv tmp.json llm_providers.json
+          fi
 
       # 5. Initialize State
       - name: Initialize State
