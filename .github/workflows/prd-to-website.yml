@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install requests
 
-      # 4. Installer et démarrer Ollama
+      # 4. Installer et démarrer Ollama avec un modèle valide
       - name: Install and start Ollama
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
@@ -43,13 +43,15 @@ jobs:
           ollama serve &
           # Attendre que le serveur soit prêt
           sleep 5
-          curl -s http://localhost:11434/api/tags || echo "Serveur non prêt"
+          # Télécharger un modèle léger valide
+          ollama pull llama3.2:1b
+          curl -s http://localhost:11434/api/tags
 
-      # 5. Générer le site web via Ollama Cloud (model:cloud = pas de clé API)
+      # 5. Générer le site web via Ollama
       - name: Generate website from PRD
         env:
           OLLAMA_HOST: http://localhost:11434
-          MODEL_NAME: minimax-m2.7:cloud
+          MODEL_NAME: llama3.2:1b
           PRD_DIR: prd
           OUTPUT_DIR: output
         run: |

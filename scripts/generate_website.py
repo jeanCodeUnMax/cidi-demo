@@ -58,15 +58,20 @@ Format de réponse attendu:
     }
     
     print(f"Appel à Ollama avec le modèle cloud {MODEL_NAME}...")
+    print(f"URL: {url}")
     
     try:
         response = requests.post(url, json=payload, timeout=120)
+        print(f"Status code: {response.status_code}")
+        print(f"Response: {response.text[:500]}")
         response.raise_for_status()
         
         result = response.json()
         return result["message"]["content"]
     except requests.exceptions.RequestException as e:
         print(f"Erreur Ollama: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response text: {e.response.text}")
         # Fallback: générer un template de base
         return generate_fallback_html(prompt)
 
