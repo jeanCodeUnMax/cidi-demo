@@ -13,10 +13,7 @@ on:
 jobs:
   generate-website:
     runs-on: ubuntu-latest
-    
-    # ⏱️ TIMEOUT GLOBAL - Tue le job après 15 min max
-    # Sur self-hosted: empêche les processus orphelins de tourner indéfiniment
-    timeout-minutes: 15
+    timeout-minutes: 10  # Réduit car plus de Docker à télécharger
     
     steps:
       # 1. Checkout du repository
@@ -34,34 +31,18 @@ jobs:
         run: |
           pip install requests
 
-      # 4. Démarrer le conteneur Ollama avec le modèle
-      - name: Start Ollama container
-        run: |
-          # Construire l'image Docker Ollama
-          docker build -t ollama-custom ./docker/ollama
-          
-          # Lancer le conteneur en arrière-plan
-          docker run -d --name ollama-server -p 11434:11434 ollama-custom
-          
-          # Attendre que le modèle soit prêt
-          echo "Attente du modèle Ollama..."
-          until curl -s http://localhost:11434/api/tags | grep -q "llama3.2:1b"; do
-            echo "Modèle pas encore prêt, attente..."
-            sleep 10
-          done
-          echo "Ollama et le modèle sont prêts !"
-
-      # 5. Générer le site web à partir du PRD
+      # 4. Générer le site web via Ollama Cloud API
       - name: Generate website from PRD
         env:
-          OLLAMA_HOST: http://localhost:11434
+          OLLAMA_API_URL: https://api.ollama.ai/api/generate
+          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
           MODEL_NAME: llama3.2:1b
           PRD_DIR: prd
           OUTPUT_DIR: output
         run: |
           python scripts/generate_website.py
 
-      # 6. Commit et push du résultat
+      # 5. Commit et push du résultat
       - name: Commit generated website
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -70,48 +51,8 @@ jobs:
           git diff --quiet && git diff --staged --quiet || git commit -m "🤀 Site web généré à partir du PRD [skip ci]"
           git push
 
-      # 7. Afficher le résultat
+      # 6. Afficher le résultat
       - name: Show generated files
         run: |
           echo "Fichiers générés:"
           ls -la output/
-
-      # 8. CLEANUP - Supprimer le conteneur Docker et libérer les ressources
-      # Toujours exécuté, même si le job échoue
-      # IMPORTANT pour self-hosted: pas de nettoyage automatique de la VM
-      - name: Cleanup Docker resources
-        if: always()
-        run: |
-          echo "🧹 Nettoyage des ressources Docker..."
-          
-          # 1. Arrêter le conteneur Ollama (avec timeout forcé)
-          echo "Arrêt du conteneur..."
-          timeout 10s docker stop ollama-server 2>/dev/null || true
-          
-          # 2. Kill forcé si le conteneur ne répond pas (self-hosted safe)
-          if docker ps -a --format '{{.Names}}' | grep -q 'ollama-server'; then
-            echo "Kill forcé du conteneur..."
-            docker kill ollama-server 2>/dev/null || true
-          fi
-          
-          # 3. Supprimer le conteneur
-          docker rm -f ollama-server 2>/dev/null || true
-          
-          # 4. Supprimer l'image
-          docker rmi -f ollama-custom 2>/dev/null || true
-          
-          # 5. Nettoyer toutes les ressources Docker inutilisées
-          docker system prune -af --volumes 2>/dev/null || true
-          
-          # 6. SELF-HOSTED: Tuer les processus orphelins ollama
-          echo "Nettoyage des processus orphelins..."
-          pkill -9 -f ollama 2>/dev/null || true
-          killall -9 ollama 2>/dev/null || true
-          
-          # 7. Libérer le port 11434 si occupé
-          fuser -k 11434/tcp 2>/dev/null || true
-          
-          echo "✅ Cleanup terminé - Aucun processus persistant"
-          echo "📊 Vérification:"
-          docker ps -a || true
-          ps aux | grep -E 'ollama|docker' | grep -v grep || echo "Aucun processus actif"
